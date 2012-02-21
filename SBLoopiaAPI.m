@@ -157,59 +157,70 @@
 
 - (void)request: (XMLRPCRequest *)request didReceiveResponse: (XMLRPCResponse *)response {
 	if ([response isFault]) {
-//		NSLog(@"Fault code: %@", [response faultCode]);
-//		NSLog(@"Fault string: %@", [response faultString]);
-		
 		//Call delegate
-		[[self delegate] loopiaAPI:self failedWithFaultCode:[response faultCode] faultString:[response faultString]];
+        if ([self.delegate respondsToSelector:@selector(loopiaAPI:failedWithFaultCode:faultString:)])
+            [[self delegate] loopiaAPI:self failedWithFaultCode:[response faultCode] faultString:[response faultString]];
 	} else {
-//		NSLog(@"Parsed response: %@", [response object]);
-	
 		//Call the delegates
 		if (([[response object] isKindOfClass:[NSString class]] && [[response object] isEqualToString:SBLoopiaStatusRateLimited]) ||
 			([[response object] isKindOfClass:[NSArray class]] && [[response object] count] && [[[response object] objectAtIndex:0] isKindOfClass:[NSString class]] && [[[response object] objectAtIndex:0] isEqualToString:SBLoopiaStatusRateLimited])) {
-			[[self delegate] loopiaAPI:self failedRateLimited:SBLoopiaStatusRateLimited];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:failedRateLimited:)])
+                [[self delegate] loopiaAPI:self failedRateLimited:SBLoopiaStatusRateLimited];
 			
 		} else if (([[response object] isKindOfClass:[NSString class]] && [[response object] isEqualToString:SBLoopiaStatusAuthError]) ||
 			([[response object] isKindOfClass:[NSArray class]] && [[response object] count] && [[[response object] objectAtIndex:0] isKindOfClass:[NSString class]] && [[[response object] objectAtIndex:0] isEqualToString:SBLoopiaStatusAuthError])) {
-			[[self delegate] loopiaAPI:self failedAuthenticateWithUsername:[[request parameters] objectAtIndex:0] password:[[request parameters] objectAtIndex:1]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:failedAuthenticateWithUsername:password:)])
+                [[self delegate] loopiaAPI:self failedAuthenticateWithUsername:[[request parameters] objectAtIndex:0] password:[[request parameters] objectAtIndex:1]];
 
 		} else if ([[request method] isEqualToString:@"domainIsFree"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self domain:[[request parameters] objectAtIndex:2] isFreeDidFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:domain:isFreeDidFinishWithString:)])
+                [[self delegate] loopiaAPI:self domain:[[request parameters] objectAtIndex:2] isFreeDidFinishWithString:[response object]];
 
 		} else if ([[request method] isEqualToString:@"payInvoiceUsingCredits"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self payInvoiceDidFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:payInvoiceDidFinishWithString:)])
+                [[self delegate] loopiaAPI:self payInvoiceDidFinishWithString:[response object]];
 			
 		} else if ([[request method] isEqualToString:@"getDomain"] && [[response object] isKindOfClass:[NSDictionary class]]) {
-			[[self delegate] loopiaAPI:self getDomain:[[request parameters] objectAtIndex:2] didFinishWithDictionary:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:getDomain:didFinishWithDictionary:)])
+                [[self delegate] loopiaAPI:self getDomain:[[request parameters] objectAtIndex:2] didFinishWithDictionary:[response object]];
 
 		} else if ([[request method] isEqualToString:@"getDomains"] && [[response object] isKindOfClass:[NSArray class]]) {
-			[[self delegate] loopiaAPI:self getDomainsDidFinishWithArray:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:getDomainsDidFinishWithArray:)])
+                [[self delegate] loopiaAPI:self getDomainsDidFinishWithArray:[response object]];
 
 		} else if ([[request method] isEqualToString:@"getSubdomains"] && [[response object] isKindOfClass:[NSArray class]]) {
-			[[self delegate] loopiaAPI:self getSubdomainsForDomain:[[request parameters] objectAtIndex:2] didFinishWithArray:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:getSubdomainsForDomain:didFinishWithArray:)])
+                [[self delegate] loopiaAPI:self getSubdomainsForDomain:[[request parameters] objectAtIndex:2] didFinishWithArray:[response object]];
 			
 		} else if ([[request method] isEqualToString:@"getZoneRecords"] && [[response object] isKindOfClass:[NSArray class]]) {
-			NSArray *loopiaZoneRecords = [SBLoopiaZoneRecord loopiaZoneRecordsFromDictionaries:[response object]];
-			[[self delegate] loopiaAPI:self getZoneRecordsForDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithArray:loopiaZoneRecords];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:getZoneRecordsForDomain:subdomain:didFinishWithArray:)]) {
+                NSArray *loopiaZoneRecords = [SBLoopiaZoneRecord loopiaZoneRecordsFromDictionaries:[response object]];
+                [[self delegate] loopiaAPI:self getZoneRecordsForDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithArray:loopiaZoneRecords];
+            }
 			
 		} else if ([[request method] isEqualToString:@"addDomainToAccount"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self addDomain:[[request parameters] objectAtIndex:2] buy:[[[request parameters] objectAtIndex:3] boolValue] didFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:addDomain:buy:didFinishWithString:)])
+                [[self delegate] loopiaAPI:self addDomain:[[request parameters] objectAtIndex:2] buy:[[[request parameters] objectAtIndex:3] boolValue] didFinishWithString:[response object]];
 			
 		} else if ([[request method] isEqualToString:@"addSubdomain"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self addSubdomain:[[request parameters] objectAtIndex:3] toDomain:[[request parameters] objectAtIndex:2] didFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:addSubdomain:toDomain:didFinishWithString:)])
+                [[self delegate] loopiaAPI:self addSubdomain:[[request parameters] objectAtIndex:3] toDomain:[[request parameters] objectAtIndex:2] didFinishWithString:[response object]];
 			
 		} else if ([[request method] isEqualToString:@"addZoneRecord"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self addZoneRecord:[[request parameters] objectAtIndex:4] toDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:addZoneRecord:toDomain:subdomain:didFinishWithString:)])
+                [[self delegate] loopiaAPI:self addZoneRecord:[[request parameters] objectAtIndex:4] toDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithString:[response object]];
 			
 		} else if ([[request method] isEqualToString:@"removeSubdomain"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self removeSubdomain:[[request parameters] objectAtIndex:3] forDomain:[[request parameters] objectAtIndex:2] didFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:removeSubdomain:forDomain:didFinishWithString:)])
+                [[self delegate] loopiaAPI:self removeSubdomain:[[request parameters] objectAtIndex:3] forDomain:[[request parameters] objectAtIndex:2] didFinishWithString:[response object]];
 
 		} else if ([[request method] isEqualToString:@"removeZoneRecord"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self removeZoneRecord:[[[request parameters] objectAtIndex:4] integerValue] forDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:removeZoneRecord:forDomain:subdomain:didFinishWithString:)])
+                [[self delegate] loopiaAPI:self removeZoneRecord:[[[request parameters] objectAtIndex:4] integerValue] forDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithString:[response object]];
 			
 		} else if ([[request method] isEqualToString:@"updateZoneRecord"] && [[response object] isKindOfClass:[NSString class]]) {
-			[[self delegate] loopiaAPI:self updateZoneRecord:[[request parameters] objectAtIndex:4] toDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithString:[response object]];
+            if ([self.delegate respondsToSelector:@selector(loopiaAPI:updateZoneRecord:toDomain:subdomain:didFinishWithString:)])
+                [[self delegate] loopiaAPI:self updateZoneRecord:[[request parameters] objectAtIndex:4] toDomain:[[request parameters] objectAtIndex:2] subdomain:[[request parameters] objectAtIndex:3] didFinishWithString:[response object]];
 		}
 	}
 }
